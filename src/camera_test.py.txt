@@ -1,0 +1,31 @@
+# 无人机视觉 - 摄像头测试程序
+import cv2
+import numpy as np
+
+print("="*50)
+print("无人机摄像头启动成功！")
+print("OpenCV 版本：", cv2.__version__)
+print("="*50)
+
+# 打开默认摄像头（0 代表电脑自带摄像头）
+cap = cv2.VideoCapture(0)
+
+while True:
+    # 读取画面
+    ret, frame = cap.read()
+    
+    if not ret:
+        print("摄像头读取失败")
+        break
+
+    # 显示画面
+    cv2.imshow("Drone Camera View", frame)
+
+    # 按 q 退出
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# 释放资源
+cap.release()
+cv2.destroyAllWindows()
+print("摄像头已关闭")
