@@ -1,0 +1,148 @@
+```markdown
+# 无人机视觉定位系统
+
+基于 树莓派4B + 摄像头 + OpenCV 实现的无人机视觉导航、目标检测与定位控制
+
+## 项目介绍
+
+本项目用于无人机自主视觉导航开发，包含：
+- 摄像头实时图像采集
+- 视觉目标识别与跟踪
+- ArUco 码精准定位
+- 光流估计（单目 / Mavlink）
+- 支持 C++ 高性能运行 + Python 快速验证
+
+## 项目结构
+
+```
+UAV-Vision-Project/
+├── README.md              # 项目说明
+├── .gitignore             # Git 忽略文件
+├── requirements.txt       # Python 依赖
+├── src/                   # 主源码目录（C++ 核心算法）
+├── scripts/               # Python 测试 / 辅助脚本
+└── docs/                  # 说明文档
+```
+
+## 环境依赖
+
+### C++ 依赖
+- OpenCV 4.x (C++)
+- C++11 及以上
+- CMake / Make
+
+### Python 依赖
+- Python 3.8+
+- opencv-python
+- torch
+- ultralytics
+- numpy
+
+## 安装 Python 依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+## C++ 编译与运行
+
+```bash
+mkdir build
+cd build
+cmake ..
+make -j4
+./drone_vision
+```
+
+## Python 演示运行
+
+```bash
+# 运行摄像头实时检测
+python src/inference/video_demo.py --source 0
+```
+
+## 功能说明
+
+- 摄像头视频流读取与显示
+- 目标识别与跟踪
+- ArUco 码精准定位
+- 无人机定点悬停控制
+- 视觉避障基础框架
+
+## 硬件平台
+
+- 树莓派 4B
+- 树莓派 V2 摄像头
+- 开源飞控（Pixhawk / PX4 / APM）
+```
+## 快速开始
+1. 安装依赖：`pip install -r requirements.txt`
+2. 运行摄像头实时识别：`python src/inference/video_demo.py`
+3. 运行系统入口：`python main.py`
+
+## 模型权重
+首次运行会自动下载 `yolov8n.pt` 权重文件，无需手动下载。
+
+## 安装（树莓派）
+1. 创建虚拟环境：
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+2.安装依赖：
+    ```bash
+    pip install -r requirements.txt
+
+3.运行摄像头实时监测：
+    ```bash
+    python -m src.inference.video_demo --source 0
+
+
+
+
+---
+
+## 3️⃣ 运行时架构：推理与控制解耦（P1）
+现在的代码已经做到：
+- `video_demo.py` 负责**视觉采集+推理+可视化**
+- `yolo_model.py` 负责**纯推理**
+- `mavlink.py` 负责**纯控制**
+- 推理结果只通过 `send_setpoint` 传递给控制层，解耦完成。
+
+---
+
+## ✅ 最终验证
+运行这两条命令，确认仓库可跑：
+```bash
+# 1. 测试系统初始化
+python main.py
+
+# 2. 测试摄像头实时识别（对齐 README）
+python -m src.inference.video_demo --source 0
+
+## 部署指南（树莓派/真机）
+### 1. 相机配置
+- 支持：USB 摄像头 / Raspberry Pi Camera V2
+- 设置分辨率：`config/settings.py` 中修改 `FRAME_WIDTH` / `FRAME_HEIGHT`
+- 设备 ID：`CAMERA_ID`（USB 摄像头通常为 0，Pi Camera 为 11）
+
+### 2. 飞控连接
+- 串口设备：`/dev/ttyAMA0`（UART）或 `/dev/ttyUSB0`（USB-TTL）
+- 波特率：`57600`（与飞控参数一致）
+- 连接命令：`sudo chmod 666 /dev/ttyAMA0`（赋予串口权限）
+
+### 3. 开机自启（Systemd 服务）
+创建 `/etc/systemd/system/drone-vision.service`：
+```ini
+[Unit]
+Description=Drone Vision Service
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/parise
+ExecStart=/home/pi/parise/.venv/bin/python src/inference/vision_control_loop.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

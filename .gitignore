@@ -72,3 +72,8 @@ test_*.txt
 *.py.txt
 camera_test*
 temp_*
+
+# 模型权重
+*.pt
+*.pth
+weights/
